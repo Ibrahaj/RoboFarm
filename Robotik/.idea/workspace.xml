@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="0101c473-7d05-4df9-a31f-23f029f871d7" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Jupyter Notebook" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="JupyterTrust" id="e7f0265f-11c5-4c1d-829d-d0d9efed09ad" />
+  <component name="ProjectId" id="1VKx49SA5WQRMAYis4xcqLHopT4" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../sms-group/pyCommonlySharedCode" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Python" />
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0101c473-7d05-4df9-a31f-23f029f871d7" name="Default Changelist" comment="" />
+      <created>1575625752807</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1575625752807</updated>
+      <workItem from="1575625753984" duration="6435000" />
+      <workItem from="1575800304691" duration="1559000" />
+      <workItem from="1575818680455" duration="4283000" />
+      <workItem from="1575823187882" duration="68000" />
+      <workItem from="1575823271178" duration="92000" />
+      <workItem from="1575882468035" duration="30000" />
+      <workItem from="1576159822724" duration="419000" />
+      <workItem from="1576170118112" duration="239000" />
+      <workItem from="1577015396377" duration="3104000" />
+      <workItem from="1577040628934" duration="458000" />
+      <workItem from="1577372498924" duration="3770000" />
+      <workItem from="1577620702804" duration="18384000" />
+      <workItem from="1577822000423" duration="2534000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="740" y="274" key="FileChooserDialogImpl" timestamp="1577814290650">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="274" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1577814290650" />
+    <state x="461" y="161" key="SettingsEditor" timestamp="1577793083250">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="161" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1577793083250" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
+          <url>file://$PROJECT_DIR$/position_test.ipynb</url>
+          <line>26</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
+          <url>file://$PROJECT_DIR$/position_test.ipynb</url>
+          <line>1</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
