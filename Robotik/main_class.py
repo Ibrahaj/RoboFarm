@@ -28,6 +28,10 @@ class MainClass:
     PIN_S_Z_AXIS = {'trigger': 1, 'echo': 2}
     # pins of the car motor [Forward, Backward]
     PIN_M_CAR = [1, 2]
+    # pin of the IR sensor in the back
+    PIN_IR_BACK = [1]
+    # pin of the IR sensor in the front
+    PIN_IR_FRONT= [1]
     # pins of the stepper motor
     PIN_STEPPER = [1, 2, 3, 4]
     STEPPER_STEPS = [[1, 0, 0, 0],
@@ -82,6 +86,11 @@ class MainClass:
         GPIO.setup(MainClass.PIN_S_Y_AXIS['echo'], GPIO.IN)
         GPIO.setup(MainClass.PIN_S_Z_AXIS['trigger'], GPIO.OUT)
         GPIO.setup(MainClass.PIN_S_Z_AXIS['echo'], GPIO.IN)
+
+        # set IR sensor pins
+        GPIO.setup(MainClass.PIN_IR_FRONT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(MainClass.PIN_IR_BACK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 
     def read_csv_position_file(self):
         """
@@ -152,6 +161,7 @@ class MainClass:
         """
         this method will define the step of the main mode
         """
+        self.move_car(MainClass.PIN_M_CAR,MainClass.PIN_IR_BACK,'forward')
         for cnter in range(self.ball_gotten, 9):
             x_start_ball = self.ball_start_pos['X'][cnter]
             y_start_ball = self.ball_start_pos['Y'][cnter]
@@ -165,8 +175,6 @@ class MainClass:
             self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
             self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
             self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
-
-
 
             weight = self.get_ballon_weight()
 
@@ -188,6 +196,8 @@ class MainClass:
                 z_end = self.end_pos_l['Z'][self.l_ball_counter]
                 self.l_ball_counter = self.l_ball_counter + 1
 
+            self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_FRONT, 'forward')
+
             self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_end)
             self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_end)
             self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_end)
@@ -196,6 +206,7 @@ class MainClass:
             self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
             self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
             self.ball_gotten = cnter+1
+            self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'backward')
 
         self.s_ball_counter = 0
         self.m_ball_counter = 0
@@ -209,7 +220,7 @@ class MainClass:
         move = True
         while move:
             if direction.lower() is 'forward':
-                if motor_pins[0] == 0:
+                if GPIO.input(motor_pins[0]) == 0:
                     GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
 
                 dist = self.get_distance(us_pins)
@@ -217,11 +228,31 @@ class MainClass:
                     GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
                     move = False
             elif direction.lower() is 'backward':
-                if motor_pins[1] == 0:
+                if GPIO.input(motor_pins[1]) == 0:
                     GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
 
                 dist = self.get_distance(us_pins)
                 if dist <= goal_distance:
+                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                    move = False
+
+    def move_car(self, motor_pins, ir_pin, direction):
+        """
+        this method will run the car dc motor and stop them when the IR sensor is triggered
+        """
+        move = True
+        while move:
+            if direction.lower() is 'forward':
+                if GPIO.input(motor_pins[0]) == 0:
+                    GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
+                if GPIO.input(ir_pin) == 0:
+                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                    move = False
+
+            if direction.lower() is 'backward':
+                if GPIO.input(motor_pins[1]) == 0:
+                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
+                if GPIO.input(ir_pin) == 0:
                     GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
                     move = False
 
@@ -261,7 +292,7 @@ class MainClass:
         """
         if movement.lower() is 'close':
             move = True
-            if dc_pins[0] == 0:
+            if GPIO.input(dc_pins[0]) == 0:
                 GPIO.output(dc_pins, (GPIO.HIGH, GPIO.LOW))
             while move:
                 for ind in range(8):
