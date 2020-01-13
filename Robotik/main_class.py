@@ -9,6 +9,8 @@ import pandas as pd
 import os
 import RPi.GPIO as GPIO
 import time
+import threading
+
 
 class MainClass:
     """
@@ -31,7 +33,7 @@ class MainClass:
     # pin of the IR sensor in the back
     PIN_IR_BACK = [1]
     # pin of the IR sensor in the front
-    PIN_IR_FRONT= [1]
+    PIN_IR_FRONT = [1]
     # pins of the stepper motor
     PIN_STEPPER = [1, 2, 3, 4]
     STEPPER_STEPS = [[1, 0, 0, 0],
@@ -44,7 +46,7 @@ class MainClass:
                      [1, 0, 0, 1]]
     # pin of the roll dc motor [Forward, Backward]
     PIN_M_ROLL = [1, 2]
-
+    PIN_RESET = [1]
 
     def __init__(self):
         """
@@ -62,6 +64,8 @@ class MainClass:
         self.m_ball_counter = 0
         self.l_ball_counter = 0
         self.ball_gotten = 0
+        self.reset = False
+        self.reset_thread = []
 
         self.setup_pins()
         self.run()
@@ -91,20 +95,22 @@ class MainClass:
         GPIO.setup(MainClass.PIN_IR_FRONT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(MainClass.PIN_IR_BACK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
     def read_csv_position_file(self):
         """
         this method will import the postion from the csv files
         """
+        # path to the csv file of the picking plat pos
         csvpath_strat = os.path.join(os.getcwd(), 'position.csv')
+        # path with the csw file for the dropping position
         csvpath_end = os.path.join(os.getcwd(), 'end_position.csv')
 
+        # create a df with the data of the picking position
         self.ball_start_pos = pd.read_csv(csvpath_strat, sep=';', header=[0])
+        # create a df for every balloon size with the dropping position
         ball_end_pos = pd.read_csv(csvpath_end, sep=';', header=[0])
         self.end_pos_s = ball_end_pos.loc[ball_end_pos['size'] == 's'].reset_index(drop=True)
         self.end_pos_m = ball_end_pos.loc[ball_end_pos['size'] == 'm'].reset_index(drop=True)
         self.end_pos_l = ball_end_pos.loc[ball_end_pos['size'] == 'l'].reset_index(drop=True)
-
 
     def check_run_mode(self):
         """
@@ -132,20 +138,27 @@ class MainClass:
         """
         this method will check the choosen mode and run it
         """
+        self.reset_thread = threading.Thread(target=self.check_reset_button())
         while True:
-            # uptade positions
+            # update positions
             self.read_csv_position_file()
-            # check for a choosen mode
+            # check for a choosed mode
             self.check_run_mode()
 
             if self.test1_button:
+                self.reset_thread.start()
                 self.test1_mode()
+                self.test1_button = False
 
             elif self.test2_button:
+                self.reset_thread.start()
                 self.test2_mode()
+                self.test2_button = False
 
             elif self.main_task_button:
+                self.reset_thread.start()
                 self.main_mode()
+                self.main_task_button = False
 
     def test1_mode(self):
         """
@@ -161,57 +174,73 @@ class MainClass:
         """
         this method will define the step of the main mode
         """
-        self.move_car(MainClass.PIN_M_CAR,MainClass.PIN_IR_BACK,'forward')
+        reset = False
+        self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'forward')
+
         for cnter in range(self.ball_gotten, 9):
-            x_start_ball = self.ball_start_pos['X'][cnter]
-            y_start_ball = self.ball_start_pos['Y'][cnter]
-            z_start_ball = 1200
-            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_start_ball)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_start_ball)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_start_ball)
+            try:
+                # get the position from csv files
+                x_start_ball = self.ball_start_pos['X'][cnter]
+                y_start_ball = self.ball_start_pos['Y'][cnter]
+                z_start_ball = 1200
+                # drive the claw to the balloon
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_start_ball)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_start_ball)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_start_ball)
 
-            self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'close', 'button_pins')
+                # fetch the balloon
+                self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'close', button_pins)
 
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
+                # drive the hand back to start position
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
 
-            weight = self.get_ballon_weight()
+                weight = self.get_ballon_weight()
 
-            if weight == 1:
-                x_end = self.end_pos_s['X'][self.s_ball_counter]
-                y_end = self.end_pos_s['Y'][self.s_ball_counter]
-                z_end = self.end_pos_s['Z'][self.s_ball_counter]
-                self.s_ball_counter = self.s_ball_counter + 1
+                if weight == 1:
+                    x_end = self.end_pos_s['X'][self.s_ball_counter]
+                    y_end = self.end_pos_s['Y'][self.s_ball_counter]
+                    z_end = self.end_pos_s['Z'][self.s_ball_counter]
+                    self.s_ball_counter = self.s_ball_counter + 1
 
-            elif weight == 1.5:
-                x_end = self.end_pos_m['X'][self.m_ball_counter]
-                y_end = self.end_pos_m['Y'][self.m_ball_counter]
-                z_end = self.end_pos_m['Z'][self.m_ball_counter]
-                self.m_ball_counter = self.m_ball_counter + 1
+                elif weight == 1.5:
+                    x_end = self.end_pos_m['X'][self.m_ball_counter]
+                    y_end = self.end_pos_m['Y'][self.m_ball_counter]
+                    z_end = self.end_pos_m['Z'][self.m_ball_counter]
+                    self.m_ball_counter = self.m_ball_counter + 1
 
-            elif weight == 2:
-                x_end = self.end_pos_l['X'][self.l_ball_counter]
-                y_end = self.end_pos_l['Y'][self.l_ball_counter]
-                z_end = self.end_pos_l['Z'][self.l_ball_counter]
-                self.l_ball_counter = self.l_ball_counter + 1
+                elif weight == 2:
+                    x_end = self.end_pos_l['X'][self.l_ball_counter]
+                    y_end = self.end_pos_l['Y'][self.l_ball_counter]
+                    z_end = self.end_pos_l['Z'][self.l_ball_counter]
+                    self.l_ball_counter = self.l_ball_counter + 1
 
-            self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_FRONT, 'forward')
+                self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_FRONT, 'forward')
 
-            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_end)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_end)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_end)
-            self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', 'button_pins')
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
-            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
-            self.ball_gotten = cnter+1
-            self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'backward')
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_end)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_end)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_end)
 
-        self.s_ball_counter = 0
-        self.m_ball_counter = 0
-        self.l_ball_counter = 0
-        self.ball_gotten = 0
+                self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', button_pins)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
+                self.ball_gotten = cnter+1
+                if self.ball_gotten == 9:
+                    self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'backward')
+                else:
+                    GPIO.output(MainClass.PIN_M_CAR, (GPIO.HIGH, GPIO.LOW))
+                    time.sleep(2)
+                    GPIO.output(MainClass.PIN_M_CAR, (GPIO.LOW, GPIO.LOW))
+            except RestBreak:
+                reset = True
+                break
+        if not reset:
+            self.s_ball_counter = 0
+            self.m_ball_counter = 0
+            self.l_ball_counter = 0
+            self.ball_gotten = 0
 
     def run_dc_motor_koordinate(self, motor_pins, us_pins, direction, goal_distance):
         """
@@ -219,22 +248,27 @@ class MainClass:
         """
         move = True
         while move:
-            if direction.lower() is 'forward':
-                if GPIO.input(motor_pins[0]) == 0:
-                    GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
+            if self.reset:
+                GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                self.reset_robot()
+                raise RestBreak
+            else:
+                if direction.lower() is 'forward':
+                    if GPIO.input(motor_pins[0]) == 0:
+                        GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
 
-                dist = self.get_distance(us_pins)
-                if dist >= goal_distance:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
-                    move = False
-            elif direction.lower() is 'backward':
-                if GPIO.input(motor_pins[1]) == 0:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
+                    dist = self.get_distance(us_pins)
+                    if dist >= goal_distance:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                        move = False
+                elif direction.lower() is 'backward':
+                    if GPIO.input(motor_pins[1]) == 0:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
 
-                dist = self.get_distance(us_pins)
-                if dist <= goal_distance:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
-                    move = False
+                    dist = self.get_distance(us_pins)
+                    if dist <= goal_distance:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                        move = False
 
     def move_car(self, motor_pins, ir_pin, direction):
         """
@@ -242,19 +276,68 @@ class MainClass:
         """
         move = True
         while move:
-            if direction.lower() is 'forward':
-                if GPIO.input(motor_pins[0]) == 0:
-                    GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
-                if GPIO.input(ir_pin) == 0:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
-                    move = False
+            if self.reset:
+                GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                self.reset_robot()
+                raise RestBreak
+            else:
+                if direction.lower() is 'forward':
+                    if GPIO.input(motor_pins[0]) == 0:
+                        GPIO.output(motor_pins, (GPIO.HIGH, GPIO.LOW))
+                    if GPIO.input(ir_pin) == 0:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                        move = False
 
-            if direction.lower() is 'backward':
-                if GPIO.input(motor_pins[1]) == 0:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
-                if GPIO.input(ir_pin) == 0:
-                    GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                if direction.lower() is 'backward':
+                    if GPIO.input(motor_pins[1]) == 0:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.HIGH))
+                    if GPIO.input(ir_pin) == 0:
+                        GPIO.output(motor_pins, (GPIO.LOW, GPIO.LOW))
+                        move = False
+
+    def run_claw_motors(self, stepper_pins, dc_pins, movement, button_pins):
+        """
+
+        """
+        move = True
+
+        while move:
+            if movement.lower() is 'close':
+
+                if GPIO.input(dc_pins[0]) == 0:
+                    GPIO.output(dc_pins, (GPIO.HIGH, GPIO.LOW))
+                for ind in range(8):
+                    GPIO.output(stepper_pins, MainClass.STEPPER_STEPS[ind])
+                    if GPIO.input(button_pins) == 1:
+                        move = False
+
+            elif movement.lower() is 'open':
+                for ind in range(7, -1, -1):
+                    GPIO.output(stepper_pins, MainClass.STEPPER_STEPS[ind])
+                if GPIO.input(button_pins) == 1:
                     move = False
+        GPIO.output(dc_pins, (GPIO.LOW, GPIO.LOW))
+        GPIO.output(stepper_pins, [0, 0, 0, 0])
+
+    def check_reset_button(self):
+        """
+        this method will check the reset button in a loop
+        """
+        check = True
+        while check:
+            if GPIO.input(MainClass.PIN_RESET) == 1:
+                self.reset = True
+                check = False
+
+    def reset_robot(self):
+        """
+        this method will drive the claw to the initial position
+        """
+        self.reset = False
+        self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+        self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
+        self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
+        self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', button_pins)
 
     def get_distance(self, us_pins):
         """
@@ -286,31 +369,6 @@ class MainClass:
 
         return distance
 
-    def run_claw_motors(self, stepper_pins, dc_pins, movement, button_pins):
-        """
-
-        """
-        if movement.lower() is 'close':
-            move = True
-            if GPIO.input(dc_pins[0]) == 0:
-                GPIO.output(dc_pins, (GPIO.HIGH, GPIO.LOW))
-            while move:
-                for ind in range(8):
-                    GPIO.output(stepper_pins, MainClass.STEPPER_STEPS[ind])
-                    if GPIO.input(button_pins) == 1:
-                        move = False
-            GPIO.output(dc_pins, (GPIO.LOW, GPIO.LOW))
-            GPIO.output(stepper_pins, [0, 0, 0, 0])
-
-        if movement.lower() is 'open':
-            move = True
-            while move:
-                for ind in range(7, -1, -1):
-                    GPIO.output(stepper_pins, MainClass.STEPPER_STEPS[ind])
-                    if GPIO.input(button_pins) == 1:
-                        move = False
-            GPIO.output(dc_pins, (GPIO.LOW, GPIO.LOW))
-            GPIO.output(stepper_pins, [0, 0, 0, 0])
 
     def get_ballon_weight(self):
         """
@@ -318,6 +376,10 @@ class MainClass:
         """
         weight = 1
         return weight
+
+
+class RestBreak(Exception): pass
+
 
 if __name__ == "__main__":
     MainClass()

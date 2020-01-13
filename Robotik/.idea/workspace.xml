@@ -2,9 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0101c473-7d05-4df9-a31f-23f029f871d7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/e/ce386a1772624e01bbdd965737ea44d49875fcc2" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/e/ce386a1772624e01bbdd965737ea44d49875fcc2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/position_test-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/position_test-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/position_test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/position_test.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,6 +76,9 @@
       <workItem from="1577620702804" duration="18384000" />
       <workItem from="1577822000423" duration="2534000" />
       <workItem from="1578482685437" duration="3472000" />
+      <workItem from="1578825680674" duration="429000" />
+      <workItem from="1578826870056" duration="3683000" />
+      <workItem from="1578833118937" duration="7545000" />
     </task>
     <servers />
   </component>
@@ -97,11 +102,6 @@
           <url>file://$PROJECT_DIR$/position_test.ipynb</url>
           <line>26</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
-          <url>file://$PROJECT_DIR$/position_test.ipynb</url>
-          <line>1</line>
-          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
