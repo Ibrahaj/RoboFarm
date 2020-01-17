@@ -4,12 +4,14 @@ test 1: testing the balloon detection and fetching
 test 2: testing the balloon classification and dropping
 main task: the complete program of the robot
 """
-
+import numpy
 import pandas as pd
 import os
 import RPi.GPIO as GPIO
 import time
 import threading
+import sys
+from load_cell.hx711 import HX711
 
 
 class MainClass:
@@ -47,6 +49,7 @@ class MainClass:
     # pin of the roll dc motor [Forward, Backward]
     PIN_M_ROLL = [1, 2]
     PIN_RESET = [1]
+    PIN_LOADCELL = {'DT': 0, 'SCK': 1}
 
     def __init__(self):
         """
@@ -164,11 +167,76 @@ class MainClass:
         """
         this method will define the step of the test 1 mode
         """
+        reset = False
+        self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'forward')
+
+        for cnter in range(self.ball_gotten, 3):
+            try:
+                # get the position from csv files
+                x_start_ball = self.ball_start_pos['X'][cnter]
+                y_start_ball = self.ball_start_pos['Y'][cnter]
+                z_start_ball = 1200
+                # drive the claw to the balloon
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_start_ball)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_start_ball)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_start_ball)
+
+                # fetch the balloon
+                self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'close', button_pins)
+
+                # lift the balloon
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+                # put the ballon back
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_start_ball)
+                self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', button_pins)
+                time.sleep(1)
+                # drive the hand back to start position
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
+                self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
+            except RestBreak:
+                reset = True
+                break
 
     def test2_mode(self):
         """
         this method will define the step of the test 2 mode
         """
+        reset = False
+        try:
+            time.sleep(1)
+            self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'close', button_pins)
+            weight = self.get_ballon_weight(MainClass.PIN_LOADCELL)
+
+            if weight == 1:
+                x_end = self.end_pos_s['X'][self.s_ball_counter]
+                y_end = self.end_pos_s['Y'][self.s_ball_counter]
+                z_end = self.end_pos_s['Z'][self.s_ball_counter]
+
+            elif weight == 1.5:
+                x_end = self.end_pos_m['X'][self.m_ball_counter]
+                y_end = self.end_pos_m['Y'][self.m_ball_counter]
+                z_end = self.end_pos_m['Z'][self.m_ball_counter]
+
+            elif weight == 2:
+                x_end = self.end_pos_l['X'][self.l_ball_counter]
+                y_end = self.end_pos_l['Y'][self.l_ball_counter]
+                z_end = self.end_pos_l['Z'][self.l_ball_counter]
+
+            self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_FRONT, 'forward')
+
+            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'forward', x_end)
+            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'forward', y_end)
+            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_end)
+
+            self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', button_pins)
+            time.sleep(1)
+            self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
+            self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
+            self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
+        except RestBreak:
+            reset = True
+            return
 
     def main_mode(self):
         """
@@ -196,7 +264,7 @@ class MainClass:
                 self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
                 self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
 
-                weight = self.get_ballon_weight()
+                weight = self.get_ballon_weight(MainClass.PIN_LOADCELL)
 
                 if weight == 1:
                     x_end = self.end_pos_s['X'][self.s_ball_counter]
@@ -223,10 +291,11 @@ class MainClass:
                 self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'forward', z_end)
 
                 self.run_claw_motors(MainClass.PIN_STEPPER, MainClass.PIN_M_ROLL, 'open', button_pins)
+                time.sleep(1)
                 self.run_dc_motor_koordinate(MainClass.PIN_M_Z_AXIS, MainClass.PIN_S_Z_AXIS, 'backward', 50)
                 self.run_dc_motor_koordinate(MainClass.PIN_M_Y_AXIS, MainClass.PIN_S_Y_AXIS, 'backward', 50)
                 self.run_dc_motor_koordinate(MainClass.PIN_M_X_AXIS, MainClass.PIN_S_X_AXIS, 'backward', 50)
-                self.ball_gotten = cnter+1
+                self.ball_gotten = cnter + 1
                 if self.ball_gotten == 9:
                     self.move_car(MainClass.PIN_M_CAR, MainClass.PIN_IR_BACK, 'backward')
                 else:
@@ -369,12 +438,37 @@ class MainClass:
 
         return distance
 
-
-    def get_ballon_weight(self):
+    def get_ballon_weight(self,load_cell_pins):
         """
-
+        this method will return the weight of the ballons
         """
-        weight = 1
+        referenceUnit = 1
+        hx = HX711(load_cell_pins{'DT'}, load_cell_pins{'SCK'})
+        # I've found out that, for some reason, the order of the bytes is not always the same between versions of python, numpy and the hx711 itself.
+        # Still need to figure out why does it change.
+        # If you're experiencing super random values, change these values to MSB or LSB until to get more stable values.
+        # There is some code below to debug and log the order of the bits and the bytes.
+        # The first parameter is the order in which the bytes are used to build the "long" value.
+        # The second paramter is the order of the bits inside each byte.
+        # According to the HX711 Datasheet, the second parameter is MSB so you shouldn't need to modify it.
+        hx.set_reading_format("MSB", "MSB")
+        # HOW TO CALCULATE THE REFFERENCE UNIT
+        # To set the reference unit to 1. Put 1kg on your sensor or anything you have and know exactly how much it weights.
+        # In this case, 92 is 1 gram because, with 1 as a reference unit I got numbers near 0 without any weight
+        # and I got numbers around 184000 when I added 2kg. So, according to the rule of thirds:
+        # If 2000 grams is 184000 then 1 grams is 184000 / 2000 = 92.
+        # hx.set_reference_unit(113)
+        hx.set_reference_unit(referenceUnit)
+        hx.reset()
+        hx.tare()
+        valarr = numpy.zeros(5)
+        for index in range(5):
+            val = hx.get_weight(5)
+            valarr[index]=val
+            hx.power_down()
+            hx.power_up()
+            time.sleep(0.1)
+        weight = numpy.average(val)
         return weight
 
 

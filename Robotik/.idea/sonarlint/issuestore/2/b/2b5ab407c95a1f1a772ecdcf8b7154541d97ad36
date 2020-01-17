@@ -1,0 +1,42 @@
+
+gpython:S116"PRename this field "readLock" to match the regular expression ^[_a-z][_a-z0-9]*$.(€¹
+kpython:S116!"ORename this field "lastVal" to match the regular expression ^[_a-z][_a-z0-9]*$.(®¯°èıÿÿÿÿ
+|python:S100."eRename method "convertFromTwosComplement24bit" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(ÖÔ¼á
+mpython:S117."VRename this parameter "inputValue" to match the regular expression ^[_a-z][a-z0-9_]*$.(ÖÔ¼á
+ipython:S100P"RRename method "readNextBit" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(İÎÂõ
+opython:S100\"SRename method "readNextByte" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(ÑºşĞûÿÿÿÿ
+Bpython:S1481a"%Remove the unused local variable "x".(½£“§ıÿÿÿÿ
+qpython:S117]"ZRename this local variable "byteValue" to match the regular expression ^[_a-z][a-z0-9_]*$.(ü›˜Æ
+opython:S100m"SRename method "readRawBytes" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(ê©úÿÿÿÿ
+Bpython:S1481}"%Remove the unused local variable "i".(¨íÕ„ûÿÿÿÿ
+qpython:S117w"ZRename this local variable "firstByte" to match the regular expression ^[_a-z][a-z0-9_]*$.(Éø¡ª
+rpython:S117x"[Rename this local variable "secondByte" to match the regular expression ^[_a-z][a-z0-9_]*$.(—¢Æâ
+vpython:S117y"ZRename this local variable "thirdByte" to match the regular expression ^[_a-z][a-z0-9_]*$.(åÒ§çøÿÿÿÿ
+@python:S108t")Either remove or fill this block of code.(ã‘Û¾
+wpython:S117"ZRename this local variable "dataBytes" to match the regular expression ^[_a-z][a-z0-9_]*$.(ƒûÏüÿÿÿÿ
+wpython:S117"_Rename this local variable "signedIntValue" to match the regular expression ^[_a-z][a-z0-9_]*$.(ÈÆö¸
+python:S117–"dRename this local variable "twosComplementValue" to match the regular expression ^[_a-z][a-z0-9_]*$.(ê­¤Âÿÿÿÿÿ
+>python:S1481¹"%Remove the unused local variable "x".(ÿï·é
+xpython:S117¿"[Rename this local variable "trimAmount" to match the regular expression ^[_a-z][a-z0-9_]*$.(•¸ß…øÿÿÿÿ
+wpython:S117·"ZRename this local variable "valueList" to match the regular expression ^[_a-z][a-z0-9_]*$.(Ä›öıÿÿÿÿ
+>python:S1481Ô"%Remove the unused local variable "x".(ÿï·é
+wpython:S117Ò"ZRename this local variable "valueList" to match the regular expression ^[_a-z][a-z0-9_]*$.(Ä›öıÿÿÿÿ
+jpython:S100è"RRename method "get_value_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(âÿĞ‘
+ipython:S100ì"RRename method "get_value_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(«µ¶a
+kpython:S100ù"SRename method "get_weight_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(¬¿â¶
+kpython:S100ş"SRename method "get_weight_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(õ‘ìË
+epython:S100‰"MRename method "tare_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(¢áë—
+|python:S117‹"dRename this local variable "backupReferenceUnit" to match the regular expression ^[_a-z][a-z0-9_]*$.(ŒØÉ»
+epython:S100›"MRename method "tare_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(êé¸»
+spython:S117¡"[Rename this local variable "backupGain" to match the regular expression ^[_a-z][a-z0-9_]*$.(›„ƒ½
+python:S117"dRename this local variable "backupReferenceUnit" to match the regular expression ^[_a-z][a-z0-9_]*$.(ığ¨ôşÿÿÿÿ
+ppython:S100É"SRename method "set_offset_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(áØØùÿÿÿÿ
+ppython:S100Ì"SRename method "set_offset_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(Ğ¹±Åüÿÿÿÿ
+kpython:S100Ò"SRename method "get_offset_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(è’õş
+ppython:S100Õ"SRename method "get_offset_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(¥Ø°œøÿÿÿÿ
+xpython:S100Ş"[Rename method "set_reference_unit_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(ò”ñşùÿÿÿÿ
+`python:S1763â"GDelete this unreachable code or refactor the code to make it reachable.(ÙãŞŸ
+spython:S100ç"[Rename method "set_reference_unit_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(ÊÕ¿É
+`python:S1763ë"GDelete this unreachable code or refactor the code to make it reachable.(ÙãŞŸ
+spython:S100ô"[Rename method "get_reference_unit_A" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(Á’é
+spython:S100ø"[Rename method "get_reference_unit_B" to match the regular expression ^[a-z_][a-z0-9_]{2,}$.(´±ÄÔ
